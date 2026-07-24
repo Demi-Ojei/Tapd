@@ -1,0 +1,13 @@
+node_modules/
+*.db
+.env
+.env.local
+.env.production
+.claude/
+CLAUDE.md
+MEMORY.md
+*.pem
+*.key
+.DS_Store
+.vscode/
+.idea/

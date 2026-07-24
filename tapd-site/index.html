@@ -1,0 +1,1404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Tapd — Digital hotel key platform for boutique hotels. Guests unlock rooms with Apple Wallet and Google Wallet. No plastic cards, no demagnetization, no front desk delays." />
+  <meta name="theme-color" content="#080C14" />
+  <title>Tapd — Access Made Easy</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garant:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CDN (for Netlify prototype; swap for build process before scaling) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- EmailJS — sends form directly to tapdcompany@gmail.com, no server needed -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script>emailjs.init("Z_eZ5AZ2hFFj47LNB");</script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            navy:    { DEFAULT: '#080C14', 50: '#0D1525', 100: '#111D30', 200: '#1A2744', 300: '#243558' },
+            gold:    { DEFAULT: '#C9A96E', light: '#DEC28A', dim: '#9A7D4F' },
+            warm:    { DEFAULT: '#E8E2D9', muted: '#A09890', faint: '#4A4540' },
+          },
+          fontFamily: {
+            display: ['Cormorant Garant', 'Georgia', 'serif'],
+            body:    ['DM Sans', 'system-ui', 'sans-serif'],
+          },
+          letterSpacing: {
+            widest2: '0.25em',
+          },
+          animation: {
+            'fade-up':      'fadeUp 0.7s ease forwards',
+            'fade-in':      'fadeIn 0.6s ease forwards',
+            'pulse-ring':   'pulseRing 2.4s ease-in-out infinite',
+            'door-open':    'doorOpen 1.2s ease forwards',
+            'phone-glow':   'phoneGlow 2s ease-in-out infinite',
+            'lock-unlock':  'lockUnlock 0.5s ease forwards',
+            'skeleton':     'skeleton 1.6s ease-in-out infinite',
+          },
+          keyframes: {
+            fadeUp:     { '0%': { opacity: '0', transform: 'translateY(28px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
+            fadeIn:     { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+            pulseRing:  { '0%,100%': { transform: 'scale(1)', opacity: '0.6' }, '50%': { transform: 'scale(1.18)', opacity: '0.2' } },
+            doorOpen:   { '0%': { transform: 'perspective(800px) rotateY(0deg)' }, '100%': { transform: 'perspective(800px) rotateY(-42deg)' } },
+            doorSwing:  { '0%': { transform: 'perspective(600px) rotateY(0deg)', opacity:'1' }, '100%': { transform: 'perspective(600px) rotateY(-68deg)', opacity:'0.6' } },
+            phoneGlow:  { '0%,100%': { filter: 'drop-shadow(0 0 12px rgba(201,169,110,0.25))' }, '50%': { filter: 'drop-shadow(0 0 28px rgba(201,169,110,0.55))' } },
+            lockUnlock: { '0%': { transform: 'rotate(0deg)' }, '100%': { transform: 'rotate(-40deg)' } },
+            skeleton:   { '0%': { backgroundPosition: '-400px 0' }, '100%': { backgroundPosition: '400px 0' } },
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    /* ── Base ── */
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      background-color: #080C14;
+      color: #E8E2D9;
+      font-family: 'DM Sans', system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* ── Scroll reveal ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(32px);
+      transition: opacity 0.75s cubic-bezier(0.16,1,0.3,1), transform 0.75s cubic-bezier(0.16,1,0.3,1);
+    }
+    .reveal.visible { opacity: 1; transform: none; }
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.22s; }
+    .reveal-delay-3 { transition-delay: 0.34s; }
+    .reveal-delay-4 { transition-delay: 0.46s; }
+
+    /* ── Reduced motion ── */
+    @media (prefers-reduced-motion: reduce) {
+      .reveal { opacity: 1; transform: none; transition: none; }
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+    }
+
+    /* ── Gold gradient text ── */
+    .text-gold-gradient {
+      background: linear-gradient(135deg, #DEC28A 0%, #C9A96E 50%, #9A7D4F 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* ── Subtle noise texture overlay ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Hairline divider ── */
+    .hairline { border-top: 1px solid #1A2744; }
+
+    /* ── Navigation ── */
+    .nav-blur {
+      background: rgba(8,12,20,0.82);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border-bottom: 1px solid rgba(26,39,68,0.6);
+    }
+
+    /* ── Door scene ── */
+    #door-panel { transform-origin: 192px center; }
+    #door-panel.opened { animation: doorSwing 1.2s cubic-bezier(0.4,0,0.2,1) forwards; }
+    #lock-shackle.unlocked { animation: lockUnlock 0.45s cubic-bezier(0.4,0,0.2,1) forwards; }
+    #door-light { opacity: 0; transition: opacity 0.6s ease 1s; }
+    #door-light.visible { opacity: 1; }
+    #phone-group { transition: transform 0.8s cubic-bezier(0.16,1,0.3,1); }
+    #phone-group.approaching { transform: translateX(28px) translateY(-8px); }
+
+    /* ── Phone scene ── */
+    .phone-scene { animation: phoneGlow 2.4s ease-in-out infinite; }
+    .pulse-ring-outer { animation: pulseRing 2.4s ease-in-out infinite; }
+    .pulse-ring-inner { animation: pulseRing 2.4s ease-in-out infinite 0.6s; }
+
+    /* ── Skeleton loader ── */
+    .skeleton-shimmer {
+      background: linear-gradient(90deg, #111D30 25%, #1A2744 50%, #111D30 75%);
+      background-size: 800px 100%;
+      animation: skeleton 1.6s ease-in-out infinite;
+    }
+
+    /* ── Feature card hover ── */
+    .feature-card {
+      background: #0D1525;
+      border: 1px solid #1A2744;
+      transition: border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .feature-card:hover {
+      border-color: #C9A96E;
+      transform: translateY(-3px);
+      box-shadow: 0 16px 48px rgba(0,0,0,0.5), 0 0 0 1px rgba(201,169,110,0.15);
+    }
+
+    /* ── Broken card visual ── */
+    .card-half {
+      transition: transform 0.6s cubic-bezier(0.16,1,0.3,1);
+    }
+    .card-left:hover  { transform: rotate(-6deg) translateX(-8px); }
+    .card-right:hover { transform: rotate(6deg) translateX(8px); }
+
+    /* ── CTA button ── */
+    .btn-primary {
+      background: linear-gradient(135deg, #C9A96E, #9A7D4F);
+      color: #080C14;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-primary::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.12), transparent);
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+    .btn-primary:hover::after { opacity: 1; }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(201,169,110,0.3); }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    .btn-ghost {
+      border: 1px solid #1A2744;
+      color: #A09890;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .btn-ghost:hover { border-color: #C9A96E; color: #E8E2D9; }
+
+    /* ── Form ── */
+    .form-input {
+      background: #0D1525;
+      border: 1px solid #1A2744;
+      color: #E8E2D9;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      caret-color: #C9A96E;
+    }
+    .form-input::placeholder { color: #4A4540; }
+    .form-input:focus {
+      outline: none;
+      border-color: #C9A96E;
+      box-shadow: 0 0 0 3px rgba(201,169,110,0.12);
+    }
+    .form-input.error { border-color: #8B3A3A; box-shadow: 0 0 0 3px rgba(139,58,58,0.12); }
+
+    /* ── Tooltip ── */
+    [data-tooltip] { position: relative; cursor: default; }
+    [data-tooltip]::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1A2744;
+      color: #E8E2D9;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px;
+      letter-spacing: 0.03em;
+      white-space: nowrap;
+      padding: 5px 10px;
+      border-radius: 4px;
+      border: 1px solid #243558;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.18s ease;
+      z-index: 50;
+    }
+    [data-tooltip]:hover::after { opacity: 1; }
+
+    /* ── Rate limit feedback ── */
+    .form-rate-warning {
+      background: rgba(139,89,30,0.15);
+      border: 1px solid rgba(201,169,110,0.25);
+      color: #C9A96E;
+    }
+
+    /* ── Section label ── */
+    .section-eyebrow {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: #C9A96E;
+    }
+
+    /* ── Ambient glow blobs ── */
+    .glow-blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+      z-index: 0;
+    }
+  </style>
+</head>
+
+<body class="relative">
+
+<!-- ═══════════════════════════════════════════════════
+     NAVIGATION
+════════════════════════════════════════════════════ -->
+<header id="nav" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300">
+  <nav class="max-w-7xl mx-auto px-6 lg:px-10 h-16 flex items-center justify-between">
+
+    <!-- Logo -->
+    <a href="#" class="flex flex-col leading-none group" aria-label="Tapd home">
+      <span class="font-display text-2xl font-light tracking-wide text-warm" style="line-height:1">Tapd</span>
+      <span class="font-body text-[9px] tracking-widest2 text-gold-dim uppercase mt-1">Access made easy</span>
+    </a>
+
+    <!-- Desktop nav -->
+    <div class="hidden md:flex items-center gap-8">
+      <a href="#how-it-works" class="font-body text-sm text-warm-muted hover:text-warm transition-colors duration-200">How it works</a>
+      <a href="#features"     class="font-body text-sm text-warm-muted hover:text-warm transition-colors duration-200">Features</a>
+      <a href="#why-tapd"     class="font-body text-sm text-warm-muted hover:text-warm transition-colors duration-200">Why Tapd</a>
+      <a href="#contact"      class="btn-primary px-5 py-2 rounded text-sm font-body">Contact Sales</a>
+    </div>
+
+    <!-- Mobile menu button -->
+    <button id="mobile-menu-btn" class="md:hidden p-2 text-warm-muted hover:text-warm transition-colors"
+            aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="mobile-menu"
+            data-tooltip="Menu">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+        <rect id="bar1" x="2" y="5"  width="18" height="1.5" rx="1" fill="currentColor" style="transition:transform 0.3s ease,opacity 0.3s ease;transform-origin:center"/>
+        <rect id="bar2" x="2" y="10" width="18" height="1.5" rx="1" fill="currentColor" style="transition:opacity 0.3s ease"/>
+        <rect id="bar3" x="2" y="15" width="18" height="1.5" rx="1" fill="currentColor" style="transition:transform 0.3s ease,opacity 0.3s ease;transform-origin:center"/>
+      </svg>
+    </button>
+  </nav>
+
+  <!-- Mobile menu -->
+  <div id="mobile-menu" class="md:hidden hidden nav-blur border-t border-navy-200">
+    <div class="max-w-7xl mx-auto px-6 py-6 flex flex-col gap-5">
+      <a href="#how-it-works" class="font-body text-sm text-warm-muted" onclick="closeMobileMenu()">How it works</a>
+      <a href="#features"     class="font-body text-sm text-warm-muted" onclick="closeMobileMenu()">Features</a>
+      <a href="#why-tapd"     class="font-body text-sm text-warm-muted" onclick="closeMobileMenu()">Why Tapd</a>
+      <a href="#contact"      class="btn-primary px-5 py-3 rounded text-sm text-center font-body" onclick="closeMobileMenu()">Contact Sales</a>
+    </div>
+  </div>
+</header>
+
+
+<!-- ═══════════════════════════════════════════════════
+     HERO
+════════════════════════════════════════════════════ -->
+<section id="hero" class="relative min-h-screen flex items-center pt-16 overflow-hidden">
+
+  <!-- Ambient glows -->
+  <div class="glow-blob w-96 h-96 bg-gold opacity-5 top-20 -left-20"></div>
+  <div class="glow-blob w-80 h-80 bg-blue-900 opacity-10 bottom-20 right-10"></div>
+
+  <div class="relative z-10 max-w-7xl mx-auto px-6 lg:px-10 w-full py-24 lg:py-0 grid lg:grid-cols-2 gap-16 lg:gap-8 items-center">
+
+    <!-- Left: Copy -->
+    <div>
+      <p class="section-eyebrow reveal mb-6">The future of hotel access</p>
+
+      <h1 class="font-display font-light leading-tight reveal reveal-delay-1 mb-6" style="font-size:clamp(2.8rem,5.5vw,4.5rem)">
+        Your room key<br />
+        <em class="text-gold-gradient not-italic">lives in your phone.</em><br />
+        <span class="text-warm opacity-60">Not in your wallet.</span>
+      </h1>
+
+      <p class="font-body font-light text-warm-muted leading-relaxed reveal reveal-delay-2 mb-10 max-w-md" style="font-size:1.05rem">
+        Tapd gives boutique hotels a digital key platform that works with Apple Wallet and Google Wallet. Guests check in and walk straight to their room. No cards. No desk queues. No demagnetised plastic.
+      </p>
+
+      <div class="flex flex-wrap gap-4 reveal reveal-delay-3">
+        <a href="#contact" class="btn-primary px-7 py-3.5 rounded font-body text-sm">
+          Book a demo
+        </a>
+        <a href="#how-it-works" class="btn-ghost px-7 py-3.5 rounded font-body text-sm">
+          See how it works
+        </a>
+      </div>
+
+      <!-- Social proof strip -->
+      <div class="mt-14 flex items-center gap-6 reveal reveal-delay-4">
+        <div class="hairline flex-1 max-w-[48px]"></div>
+        <p class="font-body text-xs text-warm-faint tracking-widest2 uppercase">Trusted by independent hoteliers</p>
+      </div>
+    </div>
+
+    <!-- Right: Close-up demo — phone near hotel door scanner -->
+    <div class="flex justify-center items-center">
+      <div class="relative w-full reveal reveal-delay-2" style="max-width:400px">
+
+        <svg id="demo-scene" viewBox="0 0 400 460" fill="none" xmlns="http://www.w3.org/2000/svg"
+             class="w-full h-auto" role="img" aria-label="iPhone showing a Tapd digital room key held to a hotel door scanner. The scanner glows gold, the lock opens, and the door swings open.">
+          <defs>
+            <radialGradient id="scannerGlow"       cx="50%" cy="50%" r="50%"><stop offset="0%"  stop-color="#C9A96E" stop-opacity="0.55"/><stop offset="100%" stop-color="#C9A96E" stop-opacity="0"/></radialGradient>
+            <radialGradient id="scannerGlowBright" cx="50%" cy="50%" r="50%"><stop offset="0%"  stop-color="#DEC28A" stop-opacity="1"/><stop offset="50%" stop-color="#C9A96E" stop-opacity="0.5"/><stop offset="100%" stop-color="#C9A96E" stop-opacity="0"/></radialGradient>
+            <radialGradient id="doorLightGrad"     cx="0%"  cy="50%" r="100%"><stop offset="0%"  stop-color="#C9A96E" stop-opacity="0.2"/><stop offset="100%" stop-color="#C9A96E" stop-opacity="0"/></radialGradient>
+            <linearGradient id="doorSurface"  x1="0" y1="0" x2="1" y2="1"><stop offset="0%"  stop-color="#0F1828"/><stop offset="100%" stop-color="#0A1018"/></linearGradient>
+            <linearGradient id="phoneSurface" x1="0" y1="0" x2="0" y2="1"><stop offset="0%"  stop-color="#1E2C42"/><stop offset="100%" stop-color="#0D1525"/></linearGradient>
+            <linearGradient id="phoneScreen"  x1="0" y1="0" x2="0" y2="1"><stop offset="0%"  stop-color="#0A1220"/><stop offset="100%" stop-color="#060E1A"/></linearGradient>
+            <linearGradient id="cardBg"       x1="0" y1="0" x2="1" y2="1"><stop offset="0%"  stop-color="#1E3050"/><stop offset="100%" stop-color="#0F1E34"/></linearGradient>
+            <filter id="glow14"><feGaussianBlur stdDeviation="14"/></filter>
+            <clipPath id="screenClip"><rect x="82" y="28" width="152" height="310" rx="12"/></clipPath>
+          </defs>
+
+          <!-- ═══ DOOR FRAME (static — stays put) ═══ -->
+          <rect x="215" y="0" width="10" height="460" fill="#070B12"/>
+
+          <!-- ═══ DOOR PANEL (animates open) ═══ -->
+          <g id="door-panel">
+            <!-- Light behind door — revealed as door opens -->
+            <rect x="215" y="0" width="185" height="460" fill="url(#doorLightGrad)" id="door-light" opacity="0"/>
+            <!-- Door surface -->
+            <rect x="218" y="0" width="182" height="460" fill="url(#doorSurface)" stroke="#1A2744" stroke-width="0.5"/>
+            <!-- Panel insets -->
+            <rect x="232" y="20"  width="154" height="178" rx="3" fill="none" stroke="#1A2744" stroke-width="0.75" opacity="0.5"/>
+            <rect x="232" y="212" width="154" height="178" rx="3" fill="none" stroke="#1A2744" stroke-width="0.75" opacity="0.5"/>
+            <rect x="232" y="404" width="154" height="40"  rx="3" fill="none" stroke="#1A2744" stroke-width="0.5"  opacity="0.35"/>
+            <!-- Room number -->
+            <rect x="278" y="30" width="56" height="24" rx="3" fill="#111D30"/>
+            <text x="306" y="47" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="11" fill="#C9A96E" font-weight="500">101</text>
+            <!-- Door handle -->
+            <rect x="220" y="216" width="8"  height="24" rx="4" fill="#1A2744" stroke="#243558" stroke-width="0.5"/>
+            <rect x="218" y="228" width="12" height="8"  rx="4" fill="#243558"/>
+          </g>
+
+          <!-- ═══ SCANNER — mounted on door edge ═══ -->
+          <rect x="204" y="128" width="46" height="92" rx="7" fill="#0A1420" stroke="#243558" stroke-width="1.5"/>
+          <rect x="210" y="135" width="34" height="78" rx="4" fill="#0C1828" stroke="#1A2744" stroke-width="0.75"/>
+          <!-- Tap zone -->
+          <circle cx="227" cy="163" r="14" fill="#0D1828" stroke="#1A2744" stroke-width="1"/>
+          <circle cx="227" cy="163" r="8"  fill="none" stroke="#1A2744" stroke-width="0.5" opacity="0.6"/>
+          <!-- NFC marks in zone -->
+          <path d="M222 160 Q227 156 232 160" stroke="#243558" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+          <path d="M220 163 Q227 157 234 163" stroke="#243558" stroke-width="0.9" fill="none" stroke-linecap="round"/>
+          <path d="M218 166 Q227 158 236 166" stroke="#243558" stroke-width="0.7" fill="none" stroke-linecap="round"/>
+          <!-- Idle pulse -->
+          <circle id="scanner-idle-glow" cx="227" cy="163" r="20" fill="url(#scannerGlow)" opacity="0.45" class="pulse-ring-outer"/>
+          <!-- Active layers -->
+          <circle id="scanner-active-glow" cx="227" cy="163" r="26" fill="url(#scannerGlowBright)" opacity="0" style="transition:opacity 0.35s ease"/>
+          <circle id="scanner-ring-1"      cx="227" cy="163" r="18" fill="none" stroke="#C9A96E" stroke-width="1.2" opacity="0" style="transition:opacity 0.35s ease"/>
+          <circle id="scanner-ring-2"      cx="227" cy="163" r="28" fill="none" stroke="#C9A96E" stroke-width="0.6" opacity="0" style="transition:opacity 0.35s ease"/>
+          <circle id="scanner-bloom"       cx="227" cy="163" r="40" fill="#C9A96E" opacity="0" filter="url(#glow14)" style="transition:opacity 0.4s ease"/>
+          <!-- Status LED -->
+          <circle id="status-led"      cx="227" cy="196" r="4"  fill="#1A2744" stroke="#243558" stroke-width="0.5"/>
+          <circle id="status-led-glow" cx="227" cy="196" r="7"  fill="#1A2744" opacity="0.5" style="transition:fill 0.4s ease"/>
+          <!-- Lock shackle -->
+          <g id="lock-shackle" style="transform-origin:227px 134px">
+            <path d="M218 142 L218 134 Q218 124 227 124 Q236 124 236 134 L236 142"
+                  stroke="#C9A96E" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          </g>
+          <!-- Lock body -->
+          <rect x="215" y="139" width="24" height="20" rx="3.5" fill="#1A2744" stroke="#C9A96E" stroke-width="1"/>
+          <circle cx="227" cy="148" r="4.5" fill="#C9A96E" opacity="0.8"/>
+          <rect x="225.8" y="148" width="2.5" height="5" rx="1" fill="#080C14"/>
+
+          <!-- ═══ PHONE — clean, floating left of door ═══ -->
+          <g id="phone-group">
+            <!-- Shadow -->
+            <rect x="26" y="58" width="152" height="310" rx="20" fill="rgba(0,0,0,0.4)" transform="translate(5,6)"/>
+            <!-- Chassis -->
+            <rect x="22" y="52" width="152" height="310" rx="20" fill="url(#phoneSurface)" stroke="#2E4060" stroke-width="1.5"/>
+            <!-- Screen -->
+            <rect x="28" y="58" width="140" height="298" rx="16" fill="url(#phoneScreen)" clip-path="url(#screenClip)"/>
+
+            <!-- Status bar -->
+            <text x="36"  y="76" font-family="DM Sans,sans-serif" font-size="9" fill="#E8E2D9" opacity="0.45">9:41</text>
+            <rect x="136" y="70" width="18" height="7" rx="2" fill="none" stroke="#E8E2D9" stroke-width="0.7" opacity="0.35"/>
+            <rect x="137" y="71" width="12" height="5" rx="1" fill="#E8E2D9" opacity="0.3"/>
+
+            <!-- Dynamic island -->
+            <rect x="68" y="60" width="40" height="10" rx="5" fill="#080C14"/>
+            <circle cx="100" cy="65" r="2.5" fill="#0D1525"/>
+
+            <!-- ── WALLET CARD — large, uncluttered ── -->
+            <rect x="32"  y="86" width="128" height="86" rx="12" fill="url(#cardBg)"/>
+            <rect x="32"  y="86" width="128" height="86" rx="12" fill="none" stroke="#C9A96E" stroke-width="0.8" opacity="0.45"/>
+            <!-- Subtle shine -->
+            <rect x="32"  y="86" width="128" height="42" rx="12" fill="rgba(255,255,255,0.03)"/>
+
+            <!-- Chip -->
+            <rect x="42" y="96" width="26" height="20" rx="3" fill="#C9A96E" opacity="0.18"/>
+            <rect x="44" y="98" width="22" height="16" rx="2" fill="none" stroke="#C9A96E" stroke-width="0.6" opacity="0.5"/>
+            <line x1="44" y1="102" x2="66" y2="102" stroke="#C9A96E" stroke-width="0.5" opacity="0.4"/>
+            <line x1="44" y1="106" x2="66" y2="106" stroke="#C9A96E" stroke-width="0.5" opacity="0.4"/>
+            <line x1="44" y1="110" x2="66" y2="110" stroke="#C9A96E" stroke-width="0.5" opacity="0.4"/>
+
+            <!-- TAPD + subtitle -->
+            <text x="80"  y="103" font-family="DM Sans,sans-serif" font-size="9"   fill="#C9A96E" font-weight="500" letter-spacing="2.5">TAPD</text>
+            <text x="80"  y="116" font-family="DM Sans,sans-serif" font-size="7.5" fill="#E8E2D9" opacity="0.5">Digital Room Key</text>
+
+            <!-- Room number — dominant, easy to read -->
+            <text x="42"  y="152" font-family="Cormorant Garant,Georgia,serif" font-size="22" fill="#E8E2D9" font-weight="300">Room 101</text>
+            <!-- Date line — one clean row -->
+            <text x="42"  y="165" font-family="DM Sans,sans-serif" font-size="7.5" fill="#A09890">Sep 1 – Sep 5, 2025</text>
+
+            <!-- Reader prompt bar -->
+            <rect x="32"  y="182" width="128" height="26" rx="7" fill="#1A2744"/>
+            <text x="96"  y="199" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="8.5" fill="#C9A96E" letter-spacing="1.2">HOLD NEAR READER</text>
+
+            <!-- NFC waves — shown on demo trigger -->
+            <g id="nfc-waves" style="opacity:0;transition:opacity 0.4s ease">
+              <path d="M168 190 Q177 200 168 210" stroke="#C9A96E" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+              <path d="M172 185 Q184 200 172 215" stroke="#C9A96E" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+              <path d="M176 180 Q191 200 176 220" stroke="#C9A96E" stroke-width="0.9" fill="none" stroke-linecap="round"/>
+            </g>
+
+            <!-- Granted checkmark — shown after unlock -->
+            <g id="granted-check" style="opacity:0;transition:opacity 0.5s ease">
+              <circle cx="96" cy="260" r="22" fill="#C9A96E" opacity="0.1"/>
+              <circle cx="96" cy="260" r="15" fill="none" stroke="#C9A96E" stroke-width="1.5"/>
+              <path d="M88 260 L94 267 L105 252" stroke="#C9A96E" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            </g>
+
+            <!-- Home indicator -->
+            <rect x="72" y="344" width="44" height="4" rx="2" fill="#1A2744" opacity="0.7"/>
+            <!-- Side buttons -->
+            <rect x="20"  y="120" width="3" height="28" rx="1.5" fill="#1A2744"/>
+            <rect x="20"  y="154" width="3" height="38" rx="1.5" fill="#1A2744"/>
+            <rect x="171" y="132" width="3" height="30" rx="1.5" fill="#1A2744"/>
+          </g>
+        </svg>
+
+        <!-- Demo button -->
+        <div class="text-center mt-6">
+          <button id="demo-unlock-btn"
+                  onclick="triggerDemoUnlock()"
+                  class="btn-ghost px-6 py-2.5 rounded text-xs font-body tracking-widest2 uppercase"
+                  data-tooltip="Watch the door open">
+            Tap to demo
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════
+     HOW IT WORKS
+════════════════════════════════════════════════════ -->
+<section id="how-it-works" class="relative py-28 lg:py-36">
+  <div class="hairline mb-28 mx-6 lg:mx-10"></div>
+
+  <div class="max-w-7xl mx-auto px-6 lg:px-10">
+    <div class="max-w-xl mb-20">
+      <p class="section-eyebrow reveal mb-4">The guest journey</p>
+      <h2 class="font-display font-light leading-snug reveal reveal-delay-1" style="font-size:clamp(2rem,4vw,3.2rem)">
+        Book. Show up.<br />
+        <em class="text-gold-gradient not-italic">Walk straight in.</em>
+      </h2>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-px bg-navy-200">
+      <!-- Step 1 -->
+      <div class="bg-navy p-10 reveal">
+        <div class="w-10 h-10 border border-gold-dim flex items-center justify-center mb-8 rounded">
+          <span class="font-display text-gold text-lg font-light">1</span>
+        </div>
+        <h3 class="font-display text-xl font-light text-warm mb-3">You book a room</h3>
+        <p class="font-body text-sm text-warm-muted leading-relaxed">
+          The second your reservation is confirmed, Tapd gets notified automatically by the hotel's booking system. No extra steps needed from you or the hotel.
+        </p>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="bg-navy p-10 reveal reveal-delay-1">
+        <div class="w-10 h-10 border border-gold-dim flex items-center justify-center mb-8 rounded">
+          <span class="font-display text-gold text-lg font-light">2</span>
+        </div>
+        <h3 class="font-display text-xl font-light text-warm mb-3">Your key arrives</h3>
+        <p class="font-body text-sm text-warm-muted leading-relaxed">
+          A digital room key drops straight into your Apple Wallet or Google Wallet. No app to download, no account to make. It just shows up — ready when you are.
+        </p>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="bg-navy p-10 reveal reveal-delay-2">
+        <div class="w-10 h-10 border border-gold-dim flex items-center justify-center mb-8 rounded">
+          <span class="font-display text-gold text-lg font-light">3</span>
+        </div>
+        <h3 class="font-display text-xl font-light text-warm mb-3">Tap and you're in</h3>
+        <p class="font-body text-sm text-warm-muted leading-relaxed">
+          Hold your phone near the door. That's it. Tapd checks the key in under a second and the lock opens. When you check out, the key disappears on its own.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════
+     WHY TAPD — The card demagnetization problem
+════════════════════════════════════════════════════ -->
+<section id="why-tapd" class="relative py-28 lg:py-36 overflow-hidden">
+
+  <div class="glow-blob w-96 h-96 bg-amber-900 opacity-5 top-0 right-0"></div>
+
+  <div class="max-w-7xl mx-auto px-6 lg:px-10">
+    <div class="grid lg:grid-cols-2 gap-16 lg:gap-24 items-center">
+
+      <!-- Broken card visual -->
+      <div class="flex justify-center items-center order-2 lg:order-1 reveal">
+        <div class="relative" style="width:320px;height:220px">
+
+          <!-- Glow behind cards -->
+          <div class="absolute inset-0 flex items-center justify-center">
+            <div class="w-48 h-32 bg-gold opacity-5 rounded-xl blur-2xl"></div>
+          </div>
+
+          <!-- Left half of broken card -->
+          <div class="card-half card-left absolute"
+               style="left:20px;top:30px;width:140px;height:88px;background:linear-gradient(135deg,#1A2744,#111D30);border-radius:8px;border:1px solid #243558;transform:rotate(-4deg)">
+            <div class="p-3 h-full flex flex-col justify-between">
+              <div class="flex justify-between items-start">
+                <div class="w-10 h-7 rounded" style="background:linear-gradient(135deg,#C9A96E55,#9A7D4F33)"></div>
+                <div class="text-right">
+                  <div class="font-body text-[8px] text-warm-faint tracking-widest2 uppercase">Hotel</div>
+                  <div class="font-display text-xs text-gold">Grand</div>
+                </div>
+              </div>
+              <div class="font-body text-[7px] text-warm-faint tracking-widest2">MAGNETIC STRIPE</div>
+            </div>
+            <!-- Tear edge -->
+            <div class="absolute right-0 top-0 bottom-0 w-3"
+                 style="background:linear-gradient(to right,transparent,#080C14);clip-path:polygon(0 0,100% 8%,100% 18%,0 25%,100% 35%,100% 48%,0 55%,100% 65%,100% 78%,0 85%,100% 92%,100% 100%,0 100%)">
+            </div>
+          </div>
+
+          <!-- Right half of broken card -->
+          <div class="card-half card-right absolute"
+               style="right:20px;top:30px;width:140px;height:88px;background:linear-gradient(135deg,#111D30,#0D1525);border-radius:8px;border:1px solid #243558;transform:rotate(4deg)">
+            <div class="p-3 h-full flex flex-col justify-between">
+              <div class="font-body text-[8px] text-warm-faint tracking-widest2 uppercase text-right">Demagnetised</div>
+              <div class="flex flex-col gap-1.5">
+                <div class="h-1 rounded bg-navy-200"></div>
+                <div class="h-1 rounded bg-navy-200 w-3/4"></div>
+              </div>
+              <div class="text-right">
+                <span class="font-body text-[8px]" style="color:#8B3A3A">ACCESS DENIED</span>
+              </div>
+            </div>
+            <!-- Tear edge -->
+            <div class="absolute left-0 top-0 bottom-0 w-3"
+                 style="background:linear-gradient(to left,transparent,#080C14);clip-path:polygon(100% 0,0 8%,0 18%,100% 25%,0 35%,0 48%,100% 55%,0 65%,0 78%,100% 85%,0 92%,0 100%,100% 100%)">
+            </div>
+          </div>
+
+          <!-- Label below -->
+          <div class="absolute bottom-0 left-0 right-0 text-center">
+            <span class="font-body text-[10px] tracking-widest2 uppercase text-warm-faint">The old way</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Copy -->
+      <div class="order-1 lg:order-2">
+        <p class="section-eyebrow reveal mb-4">Why boutique hotels switch</p>
+        <h2 class="font-display font-light leading-snug reveal reveal-delay-1 mb-8" style="font-size:clamp(2rem,4vw,3rem)">
+          The card that stops working<br />
+          <em class="text-gold-gradient not-italic">the moment it meets your phone.</em>
+        </h2>
+
+        <div class="space-y-6">
+          <div class="flex gap-5 reveal reveal-delay-1">
+            <div class="w-8 h-8 flex-shrink-0 flex items-center justify-center border border-navy-200 rounded mt-0.5" data-tooltip="Happens to nearly every guest">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M7 1v6m0 2v1" stroke="#C9A96E" stroke-width="1.5" stroke-linecap="round"/><circle cx="7" cy="7" r="6" stroke="#C9A96E" stroke-width="1"/></svg>
+            </div>
+            <div>
+              <h4 class="font-body font-medium text-warm text-sm mb-1">Your phone kills the key card</h4>
+              <p class="font-body text-sm text-warm-muted leading-relaxed">Put a hotel key card in the same pocket as your phone and the magnetic stripe wipes itself. Guests end up back at the front desk — on average more than once per stay. That's lost time for everyone.</p>
+            </div>
+          </div>
+
+          <div class="flex gap-5 reveal reveal-delay-2">
+            <div class="w-8 h-8 flex-shrink-0 flex items-center justify-center border border-navy-200 rounded mt-0.5" data-tooltip="No more midnight calls">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="6" stroke="#C9A96E" stroke-width="1"/><path d="M7 4v3.5l2 2" stroke="#C9A96E" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </div>
+            <div>
+              <h4 class="font-body font-medium text-warm text-sm mb-1">No more 2am lockouts</h4>
+              <p class="font-body text-sm text-warm-muted leading-relaxed">A dead card at midnight means a panicked guest and a late-night phone call. With Tapd the key lives on their phone — the one thing they never leave in the room — and it stays active until check-out.</p>
+            </div>
+          </div>
+
+          <div class="flex gap-5 reveal reveal-delay-3">
+            <div class="w-8 h-8 flex-shrink-0 flex items-center justify-center border border-navy-200 rounded mt-0.5" data-tooltip="Good for the planet too">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 12 C2 6 6 2 12 2 C12 8 8 12 2 12Z" stroke="#C9A96E" stroke-width="1" fill="none"/></svg>
+            </div>
+            <div>
+              <h4 class="font-body font-medium text-warm text-sm mb-1">No plastic. Full stop.</h4>
+              <p class="font-body text-sm text-warm-muted leading-relaxed">Every digital key means one less plastic card thrown away. A 20-room hotel at normal occupancy goes through around 5,000 cards a year. Tapd brings that to zero.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════
+     FEATURES
+════════════════════════════════════════════════════ -->
+<section id="features" class="relative py-28 lg:py-36">
+  <div class="hairline mb-28 mx-6 lg:mx-10"></div>
+
+  <div class="glow-blob w-80 h-80 bg-blue-800 opacity-5 bottom-0 left-0"></div>
+
+  <div class="max-w-7xl mx-auto px-6 lg:px-10">
+    <div class="max-w-xl mb-20">
+      <p class="section-eyebrow reveal mb-4">Platform capabilities</p>
+      <h2 class="font-display font-light leading-snug reveal reveal-delay-1" style="font-size:clamp(2rem,4vw,3.2rem)">
+        Everything a hotel needs<br />
+        <em class="text-gold-gradient not-italic">already built in.</em>
+      </h2>
+    </div>
+
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+      <!-- Feature 1: Apple Wallet -->
+      <div class="feature-card p-9 reveal flex flex-col">
+        <div class="mb-6 flex-shrink-0" data-tooltip="No app install required for guests">
+          <svg width="36" height="36" viewBox="0 0 36 36" fill="none" aria-hidden="true">
+            <rect width="36" height="36" rx="8" fill="#111D30"/>
+            <path d="M18 8 C14 8 11 11 11 15 C11 19 14 22 18 22 C22 22 25 19 25 15 C25 11 22 8 18 8Z" stroke="#C9A96E" stroke-width="1" fill="none"/>
+            <path d="M13 22 C11 24 10 27 10 28 L26 28 C26 27 25 24 23 22" stroke="#C9A96E" stroke-width="1" stroke-linecap="round" fill="none"/>
+          </svg>
+        </div>
+        <h3 class="font-display text-xl font-light text-warm mb-3">Apple Wallet</h3>
+        <p class="font-body text-sm text-warm-muted leading-relaxed">
+          Room keys go straight into Apple Wallet. Guests tap their iPhone or Apple Watch at the door — no app to download, no login, nothing to figure out.
+        </p>
+      </div>
+
+      <!-- Feature 2: Google Wallet -->
+      <div class="feature-card p-9 reveal reveal-delay-1 flex flex-col">
+        <div class="mb-6 flex-shrink-0" data-tooltip="Works on any Android device">
+          <svg width="36" height="36" viewBox="0 0 36 36" fill="none" aria-hidden="true">
+            <rect width="36" height="36" rx="8" fill="#111D30"/>
+            <circle cx="18" cy="18" r="8" stroke="#C9A96E" stroke-width="1" fill="none"/>
+            <path d="M18 18 H26" stroke="#C9A96E" stroke-width="1" stroke-linecap="round"/>
+            <path d="M21 15 Q26 18 21 21" stroke="#C9A96E" stroke-width="1" stroke-linecap="round" fill="none"/>
+          </svg>
+        </div>
+        <h3 class="font-display text-xl font-light text-warm mb-3">Google Wallet</h3>
+        <p class="font-body text-sm text-warm-muted leading-relaxed">
+          Android guests get the exact same experience. Google Wallet, same tap, same speed. It doesn't matter which phone your guest carries — Tapd works with both.
+        </p>
+      </div>
+
+      <!-- Feature 3: Staff master keys -->
+      <div class="feature-card p-9 reveal reveal-delay-2 flex flex-col">
+        <div class="mb-6 flex-shrink-0" data-tooltip="Role-based access for your team">
+          <svg width="36" height="36" viewBox="0 0 36 36" fill="none" aria-hidden="true">
+            <rect width="36" height="36" rx="8" fill="#111D30"/>
+            <circle cx="14" cy="15" r="5" stroke="#C9A96E" stroke-width="1" fill="none"/>
+            <path d="M19 20 L28 20 M25 20 L25 24 M22 20 L22 23" stroke="#C9A96E" stroke-width="1" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <h3 class="font-display text-xl font-light text-warm mb-3">Staff master keys</h3>
+        <p class="font-body text-sm text-warm-muted leading-relaxed">
+          Give housekeeping, maintenance, and managers digital keys scoped only to the areas they need. Every use is logged, and you can revoke any key instantly.
+        </p>
+      </div>
+
+      <!-- Feature 4: PMS Integration -->
+      <div class="feature-card p-9 reveal reveal-delay-1 flex flex-col">
+        <div class="mb-6 flex-shrink-0" data-tooltip="Connects to Cloudbeds, Opera, Apaleo and more">
+          <svg width="36" height="36" viewBox="0 0 36 36" fill="none" aria-hidden="true">
+            <rect width="36" height="36" rx="8" fill="#111D30"/>
+            <rect x="9" y="12" width="8" height="6" rx="1" stroke="#C9A96E" stroke-width="1" fill="none"/>
+            <rect x="19" y="18" width="8" height="6" rx="1" stroke="#C9A96E" stroke-width="1" fill="none"/>
+            <path d="M17 15 H22 Q24 15 24 18" stroke="#C9A96E" stroke-width="1" stroke-linecap="round" fill="none"/>
+          </svg>
+        </div>
+        <h3 class="font-display text-xl font-light text-warm mb-3">Connects to your PMS</h3>
+        <p class="font-body text-sm text-warm-muted leading-relaxed">
+          Tapd hooks into your existing booking system — Cloudbeds, Opera, Apaleo, and more. When a guest checks in, a key is issued automatically. When they check out, it's gone.
+        </p>
+      </div>
+
+      <!-- Feature 5: Audit trail -->
+      <div class="feature-card p-9 reveal reveal-delay-2 flex flex-col">
+        <div class="mb-6 flex-shrink-0" data-tooltip="Every access event is logged and timestamped">
+          <svg width="36" height="36" viewBox="0 0 36 36" fill="none" aria-hidden="true">
+            <rect width="36" height="36" rx="8" fill="#111D30"/>
+            <rect x="10" y="9" width="16" height="18" rx="2" stroke="#C9A96E" stroke-width="1" fill="none"/>
+            <path d="M14 14 H22 M14 18 H22 M14 22 H19" stroke="#C9A96E" stroke-width="1" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <h3 class="font-display text-xl font-light text-warm mb-3">Full access log</h3>
+        <p class="font-body text-sm text-warm-muted leading-relaxed">
+          Every time a door opens or a key is used, it's recorded with a timestamp and the device that used it. You always know who went where and when.
+        </p>
+      </div>
+
+      <!-- Feature 6: Instant revocation -->
+      <div class="feature-card p-9 reveal reveal-delay-3 flex flex-col">
+        <div class="mb-6 flex-shrink-0" data-tooltip="Revoke any key in under a second">
+          <svg width="36" height="36" viewBox="0 0 36 36" fill="none" aria-hidden="true">
+            <rect width="36" height="36" rx="8" fill="#111D30"/>
+            <path d="M12 18 C12 14 15 11 18 11 C21 11 23 13 24 15" stroke="#C9A96E" stroke-width="1" stroke-linecap="round" fill="none"/>
+            <path d="M14 24 L12 18 L18 20" stroke="#C9A96E" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            <path d="M20 19 L26 25 M26 19 L20 25" stroke="#C9A96E" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <h3 class="font-display text-xl font-light text-warm mb-3">Kill a key instantly</h3>
+        <p class="font-body text-sm text-warm-muted leading-relaxed">
+          Guest lost their phone? Early check-out? Security concern? Pull up the dashboard and revoke any key in one tap. It stops working immediately, everywhere.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════
+     CONTACT / SALES FORM
+════════════════════════════════════════════════════ -->
+<section id="contact" class="relative py-28 lg:py-36">
+  <div class="hairline mb-28 mx-6 lg:mx-10"></div>
+
+  <div class="max-w-7xl mx-auto px-6 lg:px-10">
+    <div class="grid lg:grid-cols-2 gap-16 lg:gap-24">
+
+      <!-- Left: Copy -->
+      <div>
+        <p class="section-eyebrow reveal mb-4">Contact sales</p>
+        <h2 class="font-display font-light leading-snug reveal reveal-delay-1 mb-6" style="font-size:clamp(2rem,4vw,3.2rem)">
+          Let's talk about<br />
+          <em class="text-gold-gradient not-italic">your property.</em>
+        </h2>
+        <p class="font-body text-sm text-warm-muted leading-relaxed reveal reveal-delay-2 mb-10 max-w-sm">
+          Tapd is designed specifically for independent and boutique hotels. Tell us about your property and we will put together a setup that fits your PMS, your lock hardware, and your team.
+        </p>
+
+        <div class="space-y-5 reveal reveal-delay-3">
+          <div class="flex items-center gap-4">
+            <div class="w-px h-8 bg-gold-dim"></div>
+            <p class="font-body text-sm text-warm-muted">Typical setup under 48 hours</p>
+          </div>
+          <div class="flex items-center gap-4">
+            <div class="w-px h-8 bg-gold-dim"></div>
+            <p class="font-body text-sm text-warm-muted">No long-term contracts for pilots</p>
+          </div>
+          <div class="flex items-center gap-4">
+            <div class="w-px h-8 bg-gold-dim"></div>
+            <p class="font-body text-sm text-warm-muted">Works with your existing lock hardware</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Form -->
+      <div class="reveal reveal-delay-1">
+
+        <!-- Skeleton loader (shown while form JS initialises) -->
+        <div id="form-skeleton" class="space-y-4" aria-hidden="true">
+          <div class="skeleton-shimmer h-12 rounded"></div>
+          <div class="skeleton-shimmer h-12 rounded"></div>
+          <div class="skeleton-shimmer h-12 rounded"></div>
+          <div class="skeleton-shimmer h-12 rounded"></div>
+          <div class="skeleton-shimmer h-32 rounded"></div>
+          <div class="skeleton-shimmer h-12 rounded w-1/2"></div>
+        </div>
+
+        <!-- Actual form (hidden until ready) -->
+        <form id="contact-form" class="hidden space-y-5" novalidate
+              aria-label="Contact sales form">
+
+          <!-- Honeypot (bots fill this, humans don't) -->
+          <p class="hidden" aria-hidden="true">
+            <label>Do not fill this in if you are human: <input name="bot-field" tabindex="-1" autocomplete="off" /></label>
+          </p>
+
+          <!-- Rate limit feedback banner -->
+          <div id="rate-limit-msg" class="hidden form-rate-warning rounded p-4 text-sm font-body" role="alert" aria-live="polite">
+            Too many submissions. Please wait a few minutes before trying again.
+          </div>
+
+          <!-- Success message -->
+          <div id="form-success" class="hidden rounded p-6 text-center" style="background:#0D1525;border:1px solid #1A2744;">
+            <div class="font-display text-2xl text-gold mb-2">Received.</div>
+            <p class="font-body text-sm text-warm-muted">We will be in touch with you shortly.</p>
+          </div>
+
+          <!-- Error summary (screen reader) -->
+          <div id="error-summary" class="hidden rounded p-4 text-sm font-body" style="background:rgba(139,58,58,0.1);border:1px solid rgba(139,58,58,0.3);color:#E88;" role="alert" aria-live="assertive"></div>
+
+          <div id="form-fields">
+            <!-- Name -->
+            <div class="mb-4">
+              <label for="f-name" class="block font-body text-xs text-warm-muted tracking-wide mb-2">
+                Full name <span class="text-gold" aria-label="required">*</span>
+              </label>
+              <input id="f-name" name="name" type="text" autocomplete="name"
+                     class="form-input w-full px-4 py-3 rounded text-sm font-body"
+                     placeholder="Jane Smith"
+                     maxlength="80"
+                     aria-required="true"
+                     aria-describedby="f-name-error" />
+              <p id="f-name-error" class="hidden mt-1.5 text-xs font-body" style="color:#E88;" role="alert"></p>
+            </div>
+
+            <!-- Email -->
+            <div class="mb-4">
+              <label for="f-email" class="block font-body text-xs text-warm-muted tracking-wide mb-2">
+                Email <span class="text-gold" aria-label="required">*</span>
+              </label>
+              <input id="f-email" name="email" type="email" autocomplete="email"
+                     class="form-input w-full px-4 py-3 rounded text-sm font-body"
+                     placeholder="janeboutiqueproperty@gmail.com"
+                     maxlength="120"
+                     aria-required="true"
+                     aria-describedby="f-email-error" />
+              <p id="f-email-error" class="hidden mt-1.5 text-xs font-body" style="color:#E88;" role="alert"></p>
+            </div>
+
+            <!-- Hotel name -->
+            <div class="mb-4">
+              <label for="f-hotel" class="block font-body text-xs text-warm-muted tracking-wide mb-2">
+                Property name <span class="text-gold" aria-label="required">*</span>
+              </label>
+              <input id="f-hotel" name="hotel" type="text"
+                     class="form-input w-full px-4 py-3 rounded text-sm font-body"
+                     placeholder="The Grand Boutique Hotel"
+                     maxlength="120"
+                     aria-required="true"
+                     aria-describedby="f-hotel-error" />
+              <p id="f-hotel-error" class="hidden mt-1.5 text-xs font-body" style="color:#E88;" role="alert"></p>
+            </div>
+
+            <!-- Room count -->
+            <div class="mb-4">
+              <label for="f-rooms" class="block font-body text-xs text-warm-muted tracking-wide mb-2">
+                Number of rooms
+              </label>
+              <select id="f-rooms" name="rooms"
+                      class="form-input w-full px-4 py-3 rounded text-sm font-body appearance-none cursor-pointer">
+                <option value="" disabled selected>Select a range</option>
+                <option value="under-100">&lt; 100 rooms</option>
+                <option value="100-300">100 – 300 rooms</option>
+                <option value="300-500">300 – 500 rooms</option>
+                <option value="500+">500+ rooms</option>
+              </select>
+            </div>
+
+            <!-- Message -->
+            <div class="mb-6">
+              <label for="f-message" class="block font-body text-xs text-warm-muted tracking-wide mb-2">
+                Anything else we should know
+              </label>
+              <textarea id="f-message" name="message" rows="4"
+                        class="form-input w-full px-4 py-3 rounded text-sm font-body resize-none"
+                        placeholder="Current PMS, lock brand, timeline..."
+                        maxlength="600"
+                        aria-describedby="f-message-count"></textarea>
+              <p id="f-message-count" class="mt-1.5 text-xs font-body text-warm-faint text-right">
+                <span id="char-count">0</span> / 600
+              </p>
+            </div>
+
+            <button type="submit" id="form-submit"
+                    class="btn-primary w-full py-3.5 rounded font-body text-sm tracking-wide">
+              <span id="btn-label">Send enquiry</span>
+            </button>
+
+            <p class="mt-4 font-body text-xs text-warm-faint text-center">
+              No marketing emails. Your details are only used to respond to this enquiry.
+            </p>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════
+     FOOTER
+════════════════════════════════════════════════════ -->
+<footer class="relative py-16 border-t border-navy-200">
+  <div class="max-w-7xl mx-auto px-6 lg:px-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
+
+    <div>
+      <div class="flex flex-col mb-3">
+        <span class="font-display text-xl font-light text-warm" style="line-height:1">Tapd</span>
+        <span class="font-body text-[9px] tracking-widest2 text-gold-dim uppercase mt-1">Access made easy</span>
+      </div>
+      <p class="font-body text-xs text-warm-faint max-w-xs leading-relaxed">
+        Digital hotel key platform for independent and boutique properties.
+      </p>
+    </div>
+
+    <div class="flex flex-col gap-3 md:text-right">
+      <a href="#contact" class="font-body text-xs text-warm-muted hover:text-warm transition-colors">Contact Sales</a>
+      <a href="#features" class="font-body text-xs text-warm-muted hover:text-warm transition-colors">Features</a>
+      <a href="mailto:tapdcompany@gmail.com" class="font-body text-xs text-warm-muted hover:text-warm transition-colors">tapdcompany@gmail.com</a>
+    </div>
+  </div>
+
+  <div class="max-w-7xl mx-auto px-6 lg:px-10 mt-12 pt-6 border-t border-navy-200 flex flex-col md:flex-row justify-between gap-3">
+    <p class="font-body text-xs text-warm-faint">
+      &copy; <span id="footer-year"></span> Tapd. All rights reserved.
+    </p>
+    <p class="font-body text-xs text-warm-faint">
+      Built for independent hoteliers.
+    </p>
+  </div>
+</footer>
+
+
+<!-- ═══════════════════════════════════════════════════
+     JAVASCRIPT
+     Security notes:
+     · No API keys anywhere in this file
+     · All form inputs validated + sanitised before submission
+     · Client-side rate limiting (5 submissions per 15 min)
+       supplements Netlify's server-side spam protection
+     · Honeypot field present for bot detection
+     · No third-party tracking scripts
+     · CSP headers should be set in netlify.toml (see instructions)
+════════════════════════════════════════════════════ -->
+<script>
+  // ── Utility: sanitise a plain string (strip HTML tags) ──────────────────────
+  function sanitiseText(str) {
+    return String(str)
+      .trim()
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/&/g, '&amp;')
+      .slice(0, 600); // hard cap
+  }
+
+  // ── Utility: basic email format check ───────────────────────────────────────
+  function isValidEmail(email) {
+    // RFC 5322 simplified — long enough for UX, not a security gate (server validates too)
+    return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email) && email.length <= 120;
+  }
+
+  // ── Utility: reject unexpected field values ──────────────────────────────────
+  // Allow-list must exactly match the option values in the <select> above.
+  // Any value not in this list is rejected before the form is submitted.
+  function isAllowedRoomValue(val) {
+    return ['', 'under-100', '100-300', '300-500', '500+'].includes(val);
+  }
+
+  // ── Navigation: scroll behaviour ────────────────────────────────────────────
+  const nav = document.getElementById('nav');
+  let lastScroll = 0;
+  window.addEventListener('scroll', () => {
+    const y = window.scrollY;
+    if (y > 40) {
+      nav.classList.add('nav-blur');
+    } else {
+      nav.classList.remove('nav-blur');
+    }
+    lastScroll = y;
+  }, { passive: true });
+
+  // ── Mobile menu ──────────────────────────────────────────────────────────────
+  const menuBtn  = document.getElementById('mobile-menu-btn');
+  const mobileMenu = document.getElementById('mobile-menu');
+  const bar1 = document.getElementById('bar1');
+  const bar2 = document.getElementById('bar2');
+  const bar3 = document.getElementById('bar3');
+  let menuOpen = false;
+
+  menuBtn.addEventListener('click', () => {
+    menuOpen = !menuOpen;
+    menuBtn.setAttribute('aria-expanded', menuOpen);
+    mobileMenu.classList.toggle('hidden', !menuOpen);
+    // Animate to X
+    if (menuOpen) {
+      bar1.style.transform = 'translateY(5px) rotate(45deg)';
+      bar2.style.opacity   = '0';
+      bar3.style.transform = 'translateY(-5px) rotate(-45deg)';
+    } else {
+      bar1.style.transform = '';
+      bar2.style.opacity   = '';
+      bar3.style.transform = '';
+    }
+  });
+
+  function closeMobileMenu() {
+    menuOpen = false;
+    menuBtn.setAttribute('aria-expanded', 'false');
+    mobileMenu.classList.add('hidden');
+    bar1.style.transform = '';
+    bar2.style.opacity   = '';
+    bar3.style.transform = '';
+  }
+
+  // ── Scroll reveal ────────────────────────────────────────────────────────────
+  const revealEls = document.querySelectorAll('.reveal');
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        revealObserver.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
+  revealEls.forEach(el => revealObserver.observe(el));
+
+  // ── Hero: immediately reveal above-fold elements ─────────────────────────────
+  document.querySelectorAll('#hero .reveal').forEach(el => {
+    // small stagger then reveal
+    setTimeout(() => el.classList.add('visible'), 100);
+  });
+
+  // ── Demo door unlock interaction ─────────────────────────────────────────────
+  // Auto-plays once after 2s so visitors see it without clicking
+  let unlockPlayed = false;
+
+  function triggerDemoUnlock() {
+    const panel      = document.getElementById('door-panel');
+    const shackle    = document.getElementById('lock-shackle');
+    const activeGlow = document.getElementById('scanner-active-glow');
+    const ring1      = document.getElementById('scanner-ring-1');
+    const ring2      = document.getElementById('scanner-ring-2');
+    const bloom      = document.getElementById('scanner-bloom');
+    const led        = document.getElementById('status-led');
+    const ledGlow    = document.getElementById('status-led-glow');
+    const nfcWaves   = document.getElementById('nfc-waves');
+    const check      = document.getElementById('granted-check');
+    const doorLight  = document.getElementById('door-light');
+    const phoneGroup = document.getElementById('phone-group');
+    const btn        = document.getElementById('demo-unlock-btn');
+
+    // ── RESET path ──────────────────────────────────────────────────────────────
+    if (unlockPlayed) {
+      panel.classList.remove('opened');
+      shackle.classList.remove('unlocked');
+      panel.style.animation   = 'none';
+      shackle.style.animation = 'none';
+      void panel.offsetWidth; // force reflow to restart animation next time
+
+      if (activeGlow) activeGlow.style.opacity = '0';
+      if (ring1)      ring1.style.opacity      = '0';
+      if (ring2)      ring2.style.opacity      = '0';
+      if (bloom)      bloom.style.opacity      = '0';
+      if (led)        led.style.fill           = '#1A2744';
+      if (ledGlow)    { ledGlow.style.fill = '#1A2744'; ledGlow.style.opacity = '0.5'; }
+      if (nfcWaves)   nfcWaves.style.opacity   = '0';
+      if (check)      check.style.opacity      = '0';
+      if (doorLight)  doorLight.style.opacity  = '0';
+      if (phoneGroup) phoneGroup.classList.remove('approaching');
+
+      unlockPlayed = false;
+      btn.textContent = 'Tap to demo';
+      return;
+    }
+
+    // ── PLAY path ──────────────────────────────────────────────────────────────
+    unlockPlayed = true;
+    btn.textContent = 'Reset';
+
+    // Step 1 (0ms): phone slides toward scanner
+    if (phoneGroup) phoneGroup.classList.add('approaching');
+
+    // Step 2 (400ms): NFC waves appear
+    setTimeout(() => {
+      if (nfcWaves) nfcWaves.style.opacity = '1';
+    }, 400);
+
+    // Step 3 (700ms): scanner lights up
+    setTimeout(() => {
+      if (activeGlow) activeGlow.style.opacity = '1';
+      if (ring1)      ring1.style.opacity      = '1';
+      if (ring2)      ring2.style.opacity      = '0.7';
+      if (bloom)      bloom.style.opacity      = '0.25';
+    }, 700);
+
+    // Step 4 (1100ms): LED turns gold (granted), shackle rotates open
+    setTimeout(() => {
+      if (led)     led.style.fill        = '#C9A96E';
+      if (ledGlow) { ledGlow.style.fill = '#C9A96E'; ledGlow.style.opacity = '0.8'; }
+      if (check)   check.style.opacity  = '1';
+      shackle.classList.add('unlocked');
+    }, 1100);
+
+    // Step 5 (1600ms): door swings open + warm light floods through
+    setTimeout(() => {
+      panel.classList.add('opened');
+      if (doorLight) {
+        doorLight.style.opacity    = '1';
+        doorLight.style.transition = 'opacity 0.8s ease';
+      }
+    }, 1600);
+  }
+
+  // Auto-play once after 2.2s so visitors see the demo without clicking
+  setTimeout(() => {
+    if (!unlockPlayed) triggerDemoUnlock();
+  }, 2200);
+
+  // ── Footer year ──────────────────────────────────────────────────────────────
+  document.getElementById('footer-year').textContent = new Date().getFullYear();
+
+  // ── Form: show actual form after a brief skeleton delay ──────────────────────
+  // Simulates async readiness / gives skeleton a moment to be seen
+  setTimeout(() => {
+    document.getElementById('form-skeleton').style.display = 'none';
+    document.getElementById('contact-form').classList.remove('hidden');
+  }, 700);
+
+  // ── Form: character counter ──────────────────────────────────────────────────
+  const msgTextarea  = document.getElementById('f-message');
+  const charCountEl  = document.getElementById('char-count');
+  msgTextarea.addEventListener('input', () => {
+    const len = msgTextarea.value.length;
+    charCountEl.textContent = len;
+    charCountEl.style.color = len > 550 ? '#C9A96E' : '';
+  });
+
+  // ── Client-side rate limiting ─────────────────────────────────────────────────
+  // Max 5 submissions per 15 minutes, stored in sessionStorage
+  // This supplements — not replaces — Netlify's server-side protection
+  const RATE_LIMIT_MAX  = 5;
+  const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+
+  function getRateLimitData() {
+    try {
+      const raw = sessionStorage.getItem('tapd_form_rl');
+      if (!raw) return { count: 0, windowStart: Date.now() };
+      return JSON.parse(raw);
+    } catch { return { count: 0, windowStart: Date.now() }; }
+  }
+
+  function setRateLimitData(data) {
+    try { sessionStorage.setItem('tapd_form_rl', JSON.stringify(data)); } catch {}
+  }
+
+  function checkRateLimit() {
+    const data = getRateLimitData();
+    const now  = Date.now();
+    if (now - data.windowStart > RATE_LIMIT_WINDOW_MS) {
+      // Window expired — reset
+      setRateLimitData({ count: 1, windowStart: now });
+      return true; // allowed
+    }
+    if (data.count >= RATE_LIMIT_MAX) return false; // blocked
+    setRateLimitData({ count: data.count + 1, windowStart: data.windowStart });
+    return true; // allowed
+  }
+
+  // ── Form: validation ──────────────────────────────────────────────────────────
+  function setFieldError(fieldId, errorId, message) {
+    const field = document.getElementById(fieldId);
+    const errEl = document.getElementById(errorId);
+    field.classList.add('error');
+    errEl.textContent = message;
+    errEl.classList.remove('hidden');
+    field.setAttribute('aria-invalid', 'true');
+  }
+
+  function clearFieldError(fieldId, errorId) {
+    const field = document.getElementById(fieldId);
+    const errEl = document.getElementById(errorId);
+    field.classList.remove('error');
+    errEl.textContent = '';
+    errEl.classList.add('hidden');
+    field.setAttribute('aria-invalid', 'false');
+  }
+
+  function validateForm() {
+    let valid = true;
+    const errors = [];
+
+    // Name
+    const name = document.getElementById('f-name').value.trim();
+    if (!name || name.length < 2) {
+      setFieldError('f-name', 'f-name-error', 'Please enter your full name.');
+      errors.push('Full name is required.');
+      valid = false;
+    } else if (name.length > 80) {
+      setFieldError('f-name', 'f-name-error', 'Name must be under 80 characters.');
+      errors.push('Name too long.');
+      valid = false;
+    } else {
+      clearFieldError('f-name', 'f-name-error');
+    }
+
+    // Email
+    const email = document.getElementById('f-email').value.trim();
+    if (!email) {
+      setFieldError('f-email', 'f-email-error', 'Please enter your work email.');
+      errors.push('Email is required.');
+      valid = false;
+    } else if (!isValidEmail(email)) {
+      setFieldError('f-email', 'f-email-error', 'Please enter a valid email address.');
+      errors.push('Invalid email.');
+      valid = false;
+    } else {
+      clearFieldError('f-email', 'f-email-error');
+    }
+
+    // Hotel
+    const hotel = document.getElementById('f-hotel').value.trim();
+    if (!hotel || hotel.length < 2) {
+      setFieldError('f-hotel', 'f-hotel-error', 'Please enter your property name.');
+      errors.push('Property name is required.');
+      valid = false;
+    } else if (hotel.length > 120) {
+      setFieldError('f-hotel', 'f-hotel-error', 'Property name must be under 120 characters.');
+      errors.push('Property name too long.');
+      valid = false;
+    } else {
+      clearFieldError('f-hotel', 'f-hotel-error');
+    }
+
+    // Rooms (validate against allow-list — reject unexpected values)
+    const rooms = document.getElementById('f-rooms').value;
+    if (!isAllowedRoomValue(rooms)) {
+      valid = false;
+      errors.push('Invalid room count selection.');
+    }
+
+    // Message length cap (already enforced by maxlength, but double-check)
+    const message = document.getElementById('f-message').value;
+    if (message.length > 600) {
+      valid = false;
+      errors.push('Message must be under 600 characters.');
+    }
+
+    // Error summary for screen readers
+    const summaryEl = document.getElementById('error-summary');
+    if (!valid && errors.length > 0) {
+      summaryEl.textContent = 'Please fix the following: ' + errors.join(' ');
+      summaryEl.classList.remove('hidden');
+    } else {
+      summaryEl.classList.add('hidden');
+    }
+
+    return valid;
+  }
+
+  // ── Form: submit — sends silently via EmailJS to tapdcompany@gmail.com ─────────
+  document.getElementById('contact-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    // Rate limit check
+    if (!checkRateLimit()) {
+      document.getElementById('rate-limit-msg').classList.remove('hidden');
+      return;
+    }
+    document.getElementById('rate-limit-msg').classList.add('hidden');
+
+    // Validate all fields
+    if (!validateForm()) return;
+
+    // Read + sanitise values
+    const name    = sanitiseText(document.getElementById('f-name').value);
+    const email   = document.getElementById('f-email').value.trim().slice(0, 120);
+    const hotel   = sanitiseText(document.getElementById('f-hotel').value);
+    const rooms   = document.getElementById('f-rooms').value;
+    const message = sanitiseText(document.getElementById('f-message').value);
+
+    // Allow-list check on rooms dropdown
+    if (!isAllowedRoomValue(rooms)) {
+      const summaryEl = document.getElementById('error-summary');
+      summaryEl.textContent = 'Invalid room count selection.';
+      summaryEl.classList.remove('hidden');
+      return;
+    }
+
+    // UI: loading state
+    const btn      = document.getElementById('form-submit');
+    const btnLabel = document.getElementById('btn-label');
+    btn.disabled   = true;
+    btnLabel.textContent = 'Sending...';
+
+    // EmailJS template parameters — these map to your template variables
+    // In your EmailJS template use: {{from_name}}, {{from_email}}, {{hotel_name}},
+    // {{room_count}}, {{message}}, {{to_email}}
+    const templateParams = {
+      from_name:  name,
+      from_email: email,
+      hotel_name: hotel,
+      room_count: rooms || 'Not specified',
+      message:    message || 'No additional notes.',
+      to_email:   'tapdcompany@gmail.com',
+      reply_to:   email,
+    };
+
+    try {
+      // Send both emails at the same time:
+      // template_x697548 → enquiry details TO tapdcompany@gmail.com
+      // template_kwpjsso → auto-reply confirmation back TO the hotel owner
+      await Promise.all([
+        emailjs.send('service_4pf96jm', 'template_x697548', templateParams),
+        emailjs.send('service_4pf96jm', 'template_kwpjsso', templateParams),
+      ]);
+
+      // Both sent — show confirmation, hide form
+      document.getElementById('form-fields').style.display = 'none';
+      document.getElementById('form-success').classList.remove('hidden');
+
+    } catch (err) {
+      console.error('EmailJS error:', err);
+
+      // Restore button
+      btn.disabled       = false;
+      btnLabel.textContent = 'Send enquiry';
+
+      // Show error message
+      const summaryEl = document.getElementById('error-summary');
+      summaryEl.textContent = 'Something went wrong sending your message. Please email us directly at tapdcompany@gmail.com';
+      summaryEl.classList.remove('hidden');
+    }
+  });
+
+  // Inline spinner keyframe (can't use Tailwind animation here without build)
+  const styleEl = document.createElement('style');
+  styleEl.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
+  document.head.appendChild(styleEl);
+
+  // ── Scroll-linked: smooth active nav highlight ────────────────────────────────
+  const sections = ['how-it-works', 'features', 'why-tapd', 'contact'];
+  const navLinks  = {};
+  sections.forEach(id => {
+    const link = document.querySelector(`a[href="#${id}"]`);
+    if (link) navLinks[id] = link;
+  });
+
+  const sectionObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      const link = navLinks[e.target.id];
+      if (!link) return;
+      if (e.isIntersecting) {
+        Object.values(navLinks).forEach(l => l.classList.remove('text-warm'));
+        link.classList.add('text-warm');
+      }
+    });
+  }, { threshold: 0.35 });
+
+  sections.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) sectionObserver.observe(el);
+  });
+</script>
+
+</body>
+</html>

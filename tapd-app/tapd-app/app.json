@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "Tapd",
+    "slug": "tapd",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "tapd",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#080C14",
+    "icon": "./assets/images/icon.png",
+    "splash": {
+      "image": "./assets/images/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#080C14"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "favicon": "./assets/images/icon.png"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.tapd.app",
+      "icon": "./assets/images/icon.png"
+    },
+    "android": {
+      "package": "com.tapd.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#080C14"
+      }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store"
+    ],
+    "newArchEnabled": false,
+    "extra": {
+      "router": {
+        "origin": false
+      }
+    }
+  }
+}
